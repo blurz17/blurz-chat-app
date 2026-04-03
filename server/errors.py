@@ -74,8 +74,6 @@ class EmailNotVerified(AppError):
     """User email is not verified"""
     pass
 
-
-
 def create_exception_handler(status_code:int,
                               initial_detail:Any):
     
