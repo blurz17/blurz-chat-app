@@ -88,8 +88,8 @@ class CreationSafeLink(URLSafeTimedSerializer):
 
     def de_serializ_url(self,token:str,max_age=1800):
         try:
-            token = self.loads(token,max_age=max_age)
-            print(token)   
+            data = self.loads(token,max_age=max_age)
+            return data
 
         except SignatureExpired as e:
             logging.error(f'Token has expired: {e}')
@@ -101,12 +101,6 @@ class CreationSafeLink(URLSafeTimedSerializer):
         
         except Exception as e:
             logging.exception(f'Unknown error decoding token: {e}')
-            
-            
+            raise InvalidToken()
 
-
-data_dict = {"name":"ahmed","age":20}
-creation = CreationSafeLink('ahmed','ahmed')
-
-token = creation.create_safe_url(data_dict)
-decode_safe_url = creation.de_serializ_url(token)
+        

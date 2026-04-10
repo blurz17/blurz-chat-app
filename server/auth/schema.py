@@ -39,7 +39,7 @@ class Create_User(BaseModel):
 
     
 class User_Activation(BaseModel): 
-    is_verifed: bool 
+    is_verified: bool 
 
 
 

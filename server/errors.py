@@ -1,7 +1,9 @@
 from typing import Any
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from fastapi import FastAPI,status
+from fastapi import FastAPI, status
+
+
 class AppError(Exception):
     """This is the base class of the entire App"""
     
@@ -38,18 +40,6 @@ class InsufficientPermission(AppError):
     """User does not have the necessary permissions to perform an action."""
     pass
 
-class BookNotFound(AppError):
-    """Book Not found"""
-    pass
-
-class TagNotFound(AppError):
-    """Tag Not found"""
-    pass
-
-class TagAlreadyExists(AppError):
-    """Tag already exists"""
-    pass
-
 class UserNotFound(AppError):
     """User Not found"""
     pass
@@ -74,13 +64,16 @@ class EmailNotVerified(AppError):
     """User email is not verified"""
     pass
 
-def create_exception_handler(status_code:int,
-                              initial_detail:Any):
+def create_exception_handler(status_code: int,
+                              initial_detail: Any):
     
-    async def handler_excption(request:Request,exc:AppError):
-        return JSONResponse(content={"status_code":status_code,"detail":initial_detail})
+    async def handler_exception(request: Request, exc: AppError):
+        return JSONResponse(
+            content={"status_code": status_code, "detail": initial_detail},
+            status_code=status_code
+        )
     
-    return handler_excption
+    return handler_exception
 
 
 def register_error_handlers(app: FastAPI):
@@ -105,16 +98,7 @@ def register_error_handlers(app: FastAPI):
             },
         ),
     )
-    app.add_exception_handler(
-        BookNotFound,
-        create_exception_handler(
-            status_code=status.HTTP_404_NOT_FOUND,
-            initial_detail={
-                "message": "Book not found",
-                "error_code": "book_not_found",
-            },
-        ),
-    )
+
     app.add_exception_handler(
         InvalidCredentials,
         create_exception_handler(
@@ -179,32 +163,58 @@ def register_error_handlers(app: FastAPI):
             },
         ),
     )
-    app.add_exception_handler(
-        TagNotFound,
-        create_exception_handler(
-            status_code=status.HTTP_404_NOT_FOUND,
-            initial_detail={"message": "Tag Not Found", "error_code": "tag_not_found"},
-        ),
-    )
 
     app.add_exception_handler(
-        TagAlreadyExists,
+        PasswordAlreadyReset,
         create_exception_handler(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_400_BAD_REQUEST,
             initial_detail={
-                "message": "Tag Already exists",
-                "error_code": "tag_exists",
+                "message": "Password has already been reset using this link",
+                "error_code": "password_already_reset",
             },
         ),
     )
 
     app.add_exception_handler(
-        BookNotFound,
+        UserAlreadyVerify,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            initial_detail={
+                "message": "User is already verified",
+                "error_code": "user_already_verified",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        VerificationError,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            initial_detail={
+                "message": "Email verification failed",
+                "error_code": "verification_error",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        DataNotFound,
         create_exception_handler(
             status_code=status.HTTP_404_NOT_FOUND,
             initial_detail={
-                "message": "Book Not Found",
-                "error_code": "book_not_found",
+                "message": "Requested data not found",
+                "error_code": "data_not_found",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        EmailNotVerified,
+        create_exception_handler(
+            status_code=status.HTTP_403_FORBIDDEN,
+            initial_detail={
+                "message": "Email is not verified",
+                "error_code": "email_not_verified",
             },
         ),
     )
