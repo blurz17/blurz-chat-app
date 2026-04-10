@@ -21,17 +21,17 @@ Mail_Config = ConnectionConfig(
 
 mail = FastMail(config=Mail_Config)
 
-async def welcome_message(recepients:str):
-    path_content = Path(BASE_DIR,"templates",'welcome.html')
-    with open(path_content,'r',encoding='utf-8') as r :
+async def welcome_message(recepients: list[str]):
+    path_content = Path(BASE_DIR, "templates", 'welcome.html')
+    with open(path_content, 'r', encoding='utf-8') as r:
         html_content = r.read()
         
 
-    message = MessageSchema(recipients=[recepients],subject='Welcome to Blurz_Book',subtype=MessageType.html ,body=html_content)
+    message = MessageSchema(recipients=recepients, subject='Welcome to Blurz Chat', subtype=MessageType.html, body=html_content)
     return message
 
 """notice the data_variables paramater is responsible for replacing the values in the html file like links """
-def send_email(recepients: list[str], subject:str,html_message_path:str,data_variables:dict | None = None): 
+def send_email(recepients: list[str], subject: str, html_message_path: str, data_variables: dict | None = None): 
     
     path_content = Path(BASE_DIR, "templates", html_message_path)
     
@@ -40,7 +40,7 @@ def send_email(recepients: list[str], subject:str,html_message_path:str,data_var
     
 
     template = Template(html_template)
-    html_content = template.render(**data_variables)
+    html_content = template.render(**(data_variables or {}))
     
     message = MessageSchema(
         recipients=recepients,
@@ -50,5 +50,3 @@ def send_email(recepients: list[str], subject:str,html_message_path:str,data_var
     )
     
     return message
-
-

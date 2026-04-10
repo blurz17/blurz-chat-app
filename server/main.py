@@ -6,6 +6,10 @@ from manager import WebSocketManager
 from db.main import init_db, close_db
 from contextlib import asynccontextmanager
 from auth.routes import auth_router
+from users.routes import user_router
+from mailserver.routes import mail_router
+from middleware import custome_simple_middle
+from errors import register_error_handlers
 
 
 
@@ -18,18 +22,21 @@ async def lifespan(app: FastAPI):
 
 
 
-
-
-
 app = FastAPI(lifespan=lifespan)
 
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
+# Register middleware, error handlers, and routers
+custome_simple_middle(app)
+register_error_handlers(app)
 
 manager = WebSocketManager()
-app.include_router(auth_router)
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(user_router, prefix="/users", tags=["users"])
+app.include_router(mail_router, prefix="/mail", tags=["mail"])
+
 @app.get('/')
 async def root(request: Request):
     return templates.TemplateResponse(
@@ -55,6 +62,3 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print(f"Error in websocket loop: {e}")
         await manager.disconnect(websocket)
-        
-
-    

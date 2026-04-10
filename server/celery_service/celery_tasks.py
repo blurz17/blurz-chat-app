@@ -1,24 +1,21 @@
 from celery import Celery
 from asgiref.sync import async_to_sync
-from mailserver.service import send_email,mail
-# Removed incorrect import from auth.service
+from mailserver.service import send_email, mail
 
-from fastapi import UploadFile
-from sqlmodel.ext.asyncio.session import AsyncSession
 from db.config import config
 from db.models import User as User_DB
-from db.main import get_session
+import base64
 
-app  = Celery()
+app = Celery()
 
 
 app.config_from_object('celery_service.celery_config')
 
 
 @app.task()
-def bg_send_mail(rec:list[str],sub:str,html_path:str,data_var:dict=None):
+def bg_send_mail(rec: list[str], sub: str, html_path: str, data_var: dict = None):
     
-    message = send_email(recepients=rec,subject=sub,html_message_path=html_path,data_variables=data_var)
+    message = send_email(recepients=rec, subject=sub, html_message_path=html_path, data_variables=data_var)
     
     # we use here this adapter for making async function work in sync context cause celery is syncrounous  
 
@@ -26,13 +23,17 @@ def bg_send_mail(rec:list[str],sub:str,html_path:str,data_var:dict=None):
     
     print('Email is sent')
 
-from db.main import async_session  # ✅ imports the factory, not a connection
+from db.main import async_session
 from db.models import User as User_DB
 from asgiref.sync import async_to_sync
 
 @app.task()
-def bg_save_profile_picture(picture_bytes: bytes, ext: str, user_id: str):
+def bg_save_profile_picture(picture_bytes_b64: str, ext: str, user_id: str):
     from auth.service import save_profile_picture_sync
+    
+    # Decode base64 string back to bytes
+    picture_bytes = base64.b64decode(picture_bytes_b64)
+    
     file_url = save_profile_picture_sync(picture_bytes, ext)
 
     async def _update_db():
